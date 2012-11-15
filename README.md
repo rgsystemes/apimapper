@@ -1,3 +1,5 @@
+[![Build Status](https://secure.travis-ci.org/sandvige/ApiMapper.png?branch=master)](http://travis-ci.org/sandvige/ApiMapper)
+
 ApiMapper is a simple wrapper arround Buzz to perform API calls.
 
 ```php
