@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit bootstrap="./test/bootstrap.php" colors="true">
+    <testsuites>
+        <testsuite name="ApiMapper Test Suite">
+            <directory suffix="Test.php">./test/ApiMapper/</directory>
+        </testsuite>
+    </testsuites>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">./lib/ApiMapper/</directory>
+        </whitelist>
+    </filter>
+</phpunit>

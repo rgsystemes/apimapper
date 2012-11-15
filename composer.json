@@ -1,0 +1,24 @@
+{
+    "name": "sandvige/apimapper",
+    "description": "API wrapper",
+    "keywords": ["api", "buzz", "http client", "curl"],
+    "homepage": "https://github.com/sandvige/ApiMapper",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Edouard COLE",
+            "email": "ed@grg-systemes.com",
+            "homepage": "http://devquotes.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+		"kriswallsmith/buzz": ">=0.7"
+    },
+    "autoload": {
+        "psr-0": {
+            "ApiMapper": "lib/"
+        }
+    }
+}
