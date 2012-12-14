@@ -240,7 +240,9 @@ class ApiMapper
         $url = $this->buildUrl($route, $parameters);
 
         // Perform the call
-        $response = $this->browser->call($url, $method);
+        $response = $this->browser->call($url, $method, array(
+            "X-Forwarded-For: " . $_SERVER['REMOTE_ADDR']
+        ));
 
         // Parse the content
         $content = array(
