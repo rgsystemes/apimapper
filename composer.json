@@ -1,15 +1,15 @@
 {
-    "name": "sandvige/apimapper",
+    "name": "rgsystemes/apimapper",
     "description": "API wrapper",
     "keywords": ["api", "buzz", "http client", "curl"],
-    "homepage": "https://github.com/sandvige/ApiMapper",
+    "homepage": "https://github.com/rgsystemes/apimapper",
     "type": "library",
     "license": "MIT",
     "authors": [
         {
             "name": "Edouard COLE",
             "email": "ed@rg-systemes.com",
-            "homepage": "http://devquotes.com"
+            "homepage": "http://www.rg-systemes.com"
         }
     ],
     "require": {
