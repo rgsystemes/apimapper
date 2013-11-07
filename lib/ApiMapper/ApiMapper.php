@@ -5,6 +5,7 @@ namespace ApiMapper;
 use ApiMapper\EventListeners\ListenerInterface;
 use ApiMapper\ParameterProviders\ParameterProviderInterface;
 
+use Buzz\Message\RequestInterface;
 use Buzz\Browser;
 use Exception;
 
@@ -215,6 +216,20 @@ class ApiMapper
     }
 
     /**
+     * Return true if the given method is safe (GET or HEAD)
+     * 
+     * @param string $method
+     * @return bool
+     */
+    private static function isSafeMethod($method)
+    {
+        return in_array(strtoupper($method), array(
+            RequestInterface::METHOD_GET,
+            RequestInterface::METHOD_HEAD
+        ));
+    }
+
+    /**
      * Perform an HTTP call
      * 
      * $arguments is made of two arguments:
@@ -232,7 +247,7 @@ class ApiMapper
         if (empty($arguments))
             throw new Exception("No arguments have been passed to ApiMapper::$method()");
 
-        // Extracts arguments (Note $parameters is optionnal)
+        // Extracts arguments (Note $parameters and $fields are optionnal)
         $route = array_shift($arguments);
         $parameters = empty($arguments) ? array() : array_shift($arguments);
 
@@ -240,19 +255,26 @@ class ApiMapper
         $url = $this->buildUrl($route, $parameters);
 
         // Perform the call
-        $response = $this->browser->call($url, $method, array(
-            "X-Forwarded-For: " . $_SERVER['REMOTE_ADDR']
-        ));
+        if (static::isSafeMethod($method)) {
+            $response = $this->browser->call($url, $method, array(
+                "X-Forwarded-For: " . $_SERVER['REMOTE_ADDR']
+            ));
+        } else {
+            $fields = empty($arguments) ? array() : array_shift($arguments);
+            $response = $this->browser->submit($url, $fields, $method, array(
+                "X-Forwarded-For: " . $_SERVER['REMOTE_ADDR']
+            ));
+        }
 
         // Parse the content
         $content = array(
-                "method" => strtoupper($method),
-                "route" => $route,
-                "url" => $url,
-                "response" => $response,
-                "parameter" => $parameters,
-                "json" => json_decode($response->getContent(), true)
-            );
+            "method" => strtoupper($method),
+            "route" => $route,
+            "url" => $url,
+            "response" => $response,
+            "parameter" => $parameters,
+            "json" => json_decode($response->getContent(), true)
+        );
 
         // Dispatch content to event listeners
         $this->dispatch($content);
