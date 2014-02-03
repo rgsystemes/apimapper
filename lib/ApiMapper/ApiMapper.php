@@ -178,7 +178,7 @@ class ApiMapper
                     $parameters[$result] = $parameter;
                 }
 
-                $route = str_replace($result, $parameters[$result], $route);
+                $route = str_replace($result, rawurlencode($parameters[$result]), $route);
                 unset($parameters[$result]);
             }
         }
@@ -189,6 +189,9 @@ class ApiMapper
             if ($parameter !== false)
                 $parameters[$parameterName] = $parameter;
         }
+
+        foreach ($parameters as & $parameter)
+            $paremeter = rawurlencode($parameter);
 
         // Build the query fields with the remaining parameters
         $query = http_build_query($parameters);
