@@ -1,8 +1,8 @@
 <?php
 
-namespace ApiMapper\ParameterProviders;
+namespace ApiMapper\Providers;
 
-class GenericProvider implements ParameterProviderInterface
+class GenericProvider implements ProviderInterface
 {
     private $value;
 

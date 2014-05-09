@@ -3,7 +3,7 @@
 namespace ApiMapper;
 
 use ApiMapper\EventListeners\ListenerInterface;
-use ApiMapper\ParameterProviders\ParameterProviderInterface;
+use ApiMapper\Providers\ProviderInterface;
 
 use Buzz\Message\RequestInterface;
 use Buzz\Browser;
@@ -35,16 +35,23 @@ class ApiMapper
     /**
      * Holds route parameter providers
      *
-     * @var array(ParameterProviderInterface)
+     * @var array(ProviderInterface)
      */
     private $routeParameters = array(); 
 
     /**
      * Holds query parameter providers
      *
-     * @var array(ParameterProviderInterface)
+     * @var array(ProviderInterface)
      */
     private $queryParameters = array();
+
+    /**
+     * Holds header parameters
+     *
+     * @var array(ProviderInterface)
+     */
+    private $headerProviders = array();
 
     public function __construct(Browser $browser, $baseUrl = null)
     {
@@ -66,9 +73,9 @@ class ApiMapper
      * Add a route parameter provider to the current collection
      *
      * @param string $name
-     * @param ParameterProviderInterface $routeParameter 
+     * @param ProviderInterface $routeParameter 
      */
-    public function addRouteParameter($name, ParameterProviderInterface $routeParameter)
+    public function addRouteParameter($name, ProviderInterface $routeParameter)
     {
         $this->routeParameters[$name] = $routeParameter;
     }
@@ -76,7 +83,7 @@ class ApiMapper
     /**
      * Get the route parameter provider collection
      *
-     * @return array(ParameterProviderInterface)
+     * @return array(ProviderInterface)
      */
     public function getRouteParameters()
     {
@@ -97,9 +104,9 @@ class ApiMapper
      * Add a query parameter provider to the current collection
      *
      * @param string $name
-     * @param ParameterProviderInterface $queryParameter 
+     * @param ProviderInterface $queryParameter 
      */
-    public function addQueryParameter($name, ParameterProviderInterface $queryParameter)
+    public function addQueryParameter($name, ProviderInterface $queryParameter)
     {
         $this->queryParameters[$name] = $queryParameter;
     }
@@ -107,7 +114,7 @@ class ApiMapper
     /**
      * Get the query parameter provider collection
      *
-     * @return array(ParameterProviderInterface)
+     * @return array(ProviderInterface)
      */
     public function getQueryParameters()
     {
@@ -127,7 +134,7 @@ class ApiMapper
     /**
      * Add an event listener to the current collection
      *
-     * @param EventListenerInterface $eventListener 
+     * @param ListenerInterface $eventListener 
      */
     public function addEventListener(ListenerInterface $eventListener)
     {
@@ -137,11 +144,41 @@ class ApiMapper
     /**
      * Get the event listeners collection
      *
-     * @return array(EventListenerInterface)
+     * @return array(ListenerInterface)
      */
     public function getEventListeners()
     {
         return $this->eventListeners;
+    }
+
+    /**
+     * Set the header providers collection
+     *
+     * @param array $eventListeners
+     */
+    public function setHeaderProviders(array $headerProviders)
+    {
+        $this->headerProviders = $headerProviders;
+    }
+
+    /**
+     * Add an header providers to the current collection
+     *
+     * @param ProviderInterface $eventListener
+     */
+    public function addHeaderProvider(ProviderInterface $headerProvider)
+    {
+        $this->headerProviders[] = $headerProvider;
+    }
+
+    /**
+     * Get the header providers collection
+     *
+     * @return array(ProviderInterface)
+     */
+    public function getHeaderProviders()
+    {
+        return $this->headerProviders;
     }
 
     /**
@@ -257,16 +294,20 @@ class ApiMapper
         // Fill route placeholders, and append query fields
         $url = $this->buildUrl($route, $parameters);
 
+        // Load headers
+        $headers = array();
+        foreach ($this->headerProviders as $headerProvider) {
+            $header = $headerProvider->lookup($route);
+            if ($header !== false)
+                $headers[] = $header;
+        }
+
         // Perform the call
         if (static::isSafeMethod($method)) {
-            $response = $this->browser->call($url, $method, array(
-                "X-Forwarded-For: " . $_SERVER['REMOTE_ADDR']
-            ));
+            $response = $this->browser->call($url, $method, $headers);
         } else {
             $fields = empty($arguments) ? array() : array_shift($arguments);
-            $response = $this->browser->submit($url, $fields, $method, array(
-                "X-Forwarded-For: " . $_SERVER['REMOTE_ADDR']
-            ));
+            $response = $this->browser->submit($url, $fields, $method, $headers);
         }
 
         // Parse the content
@@ -275,7 +316,7 @@ class ApiMapper
             "route" => $route,
             "url" => $url,
             "response" => $response,
-            "parameter" => $parameters,
+            "parameters" => $parameters,
             "json" => json_decode($response->getContent(), true)
         );
 
