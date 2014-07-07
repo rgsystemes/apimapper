@@ -37,7 +37,7 @@ class ApiMapper
      *
      * @var array(ProviderInterface)
      */
-    private $routeParameters = array(); 
+    private $routeParameters = array();
 
     /**
      * Holds query parameter providers
@@ -45,6 +45,13 @@ class ApiMapper
      * @var array(ProviderInterface)
      */
     private $queryParameters = array();
+
+    /**
+     * Holds post fields parameters providers
+     *
+     * @var array(ProviderInterface)
+     */
+    private $postFieldsParameters = array();
 
     /**
      * Holds header parameters
@@ -62,7 +69,7 @@ class ApiMapper
     /**
      * Set the route parameter providers collection
      *
-     * @param array $routeParameters 
+     * @param array $routeParameters
      */
     public function setRouteParameters(array $routeParameters)
     {
@@ -73,7 +80,7 @@ class ApiMapper
      * Add a route parameter provider to the current collection
      *
      * @param string $name
-     * @param ProviderInterface $routeParameter 
+     * @param ProviderInterface $routeParameter
      */
     public function addRouteParameter($name, ProviderInterface $routeParameter)
     {
@@ -93,7 +100,7 @@ class ApiMapper
     /**
      * Set the query parameter providers collection
      *
-     * @param array $queryParameters 
+     * @param array $queryParameters
      */
     public function setQueryParameters(array $queryParameters)
     {
@@ -101,14 +108,35 @@ class ApiMapper
     }
 
     /**
+     * Set the post field parameter providers collection
+     *
+     * @param array $postFieldsParameters
+     */
+    public function setPostFieldsParameters(array $postFieldsParameters)
+    {
+        $this->postFieldsParameters = $postFieldsParameters;
+    }
+
+    /**
      * Add a query parameter provider to the current collection
      *
      * @param string $name
-     * @param ProviderInterface $queryParameter 
+     * @param ProviderInterface $queryParameter
      */
     public function addQueryParameter($name, ProviderInterface $queryParameter)
     {
         $this->queryParameters[$name] = $queryParameter;
+    }
+
+    /**
+     * Add a post field parameter provider to the current collection
+     *
+     * @param string $name
+     * @param ProviderInterface $postFieldParameter
+     */
+    public function addPostFieldParameter($name, ProviderInterface $postFieldParameter)
+    {
+        $this->postFieldsParameters[$name] = $postFieldParameter;
     }
 
     /**
@@ -122,9 +150,19 @@ class ApiMapper
     }
 
     /**
+     * Get the post field parameter provider collection
+     *
+     * @return array(ProviderInterface)
+     */
+    public function getPostFieldsParameters()
+    {
+        return $this->postFieldsParameters;
+    }
+
+    /**
      * Set the event listeners collection
      *
-     * @param array $eventListeners 
+     * @param array $eventListeners
      */
     public function setEventListeners(array $eventListeners)
     {
@@ -134,7 +172,7 @@ class ApiMapper
     /**
      * Add an event listener to the current collection
      *
-     * @param ListenerInterface $eventListener 
+     * @param ListenerInterface $eventListener
      */
     public function addEventListener(ListenerInterface $eventListener)
     {
@@ -186,7 +224,7 @@ class ApiMapper
      *
      * @param string $originalRoute
      * @param array $parameters
-     * @return string 
+     * @return string
      */
     private function buildUrl($originalRoute, $parameters)
     {
@@ -228,7 +266,7 @@ class ApiMapper
         }
 
         foreach ($parameters as & $parameter)
-            $paremeter = rawurlencode($parameter);
+            $parameter = rawurlencode($parameter);
 
         // Build the query fields with the remaining parameters
         $query = http_build_query($parameters);
@@ -247,7 +285,7 @@ class ApiMapper
     /**
      * Dispatch data to all event listeners
      *
-     * @param array $data 
+     * @param array $data
      */
     private function dispatch($data)
     {
@@ -257,7 +295,7 @@ class ApiMapper
 
     /**
      * Return true if the given method is safe (GET or HEAD)
-     * 
+     *
      * @param string $method
      * @return bool
      */
@@ -271,7 +309,7 @@ class ApiMapper
 
     /**
      * Perform an HTTP call
-     * 
+     *
      * $arguments is made of two arguments:
      * - first: route (Example: "{token}/ticket/list/{root}")
      * - second: parameters (Example: array("{root}" => "12", "key1" => "value2"), optionnal)
@@ -290,9 +328,17 @@ class ApiMapper
         // Extracts arguments (Note $parameters and $fields are optionnal)
         $route = array_shift($arguments);
         $parameters = empty($arguments) ? array() : array_shift($arguments);
+        $fields = empty($arguments) ? array() : array_shift($arguments);
 
         // Fill route placeholders, and append query fields
         $url = $this->buildUrl($route, $parameters);
+
+        // Add post field parameter providers
+        foreach ($this->postFieldsParameters as $fieldName => $field) {
+            $field = $field->lookup($route);
+            if ($field !== false)
+                $fields[$fieldName] = $field;
+        }
 
         // Load headers
         $headers = array();
@@ -306,7 +352,6 @@ class ApiMapper
         if (static::isSafeMethod($method)) {
             $response = $this->browser->call($url, $method, $headers);
         } else {
-            $fields = empty($arguments) ? array() : array_shift($arguments);
             $response = $this->browser->submit($url, $fields, $method, $headers);
         }
 
