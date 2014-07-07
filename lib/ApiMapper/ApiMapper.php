@@ -261,7 +261,7 @@ class ApiMapper
         // Add query parameter providers
         foreach ($this->queryParameters as $parameterName => $parameter) {
             $parameter = $parameter->lookup($originalRoute);
-            if ($parameter !== false)
+            if ($parameter !== false && !isset($parameters[$parameterName]))
                 $parameters[$parameterName] = $parameter;
         }
 
