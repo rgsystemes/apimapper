@@ -265,9 +265,6 @@ class ApiMapper
                 $parameters[$parameterName] = $parameter;
         }
 
-        foreach ($parameters as & $parameter)
-            $parameter = rawurlencode($parameter);
-
         // Build the query fields with the remaining parameters
         $query = http_build_query($parameters);
 
