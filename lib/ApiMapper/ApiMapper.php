@@ -220,6 +220,19 @@ class ApiMapper
     }
 
     /**
+     * Select a base URL to use for the given call
+     * 
+     * @return string
+     */
+    public function getBaseUrl()
+    {
+        if (is_array($this->baseUrl))
+            return $this->baseUrl[mt_rand(0, count($this->baseUrl) - 1)];
+
+        return $this->baseUrl;
+    }
+
+    /**
      * Build an URL
      *
      * @param string $originalRoute
@@ -270,7 +283,7 @@ class ApiMapper
 
         // Build the final URL
         return http_build_url(
-                $this->baseUrl,
+                $this->getBaseUrl(),
                 array(
                     "path" => $route,
                     "query" => $query
