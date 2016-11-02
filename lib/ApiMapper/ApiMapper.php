@@ -282,7 +282,7 @@ class ApiMapper
         $query = http_build_query($parameters);
 
         // Build the final URL
-        if (function_exists('imap_open'))
+        if (function_exists('http_build_url'))
             return http_build_url(
                     $this->getBaseUrl(),
                     array(
