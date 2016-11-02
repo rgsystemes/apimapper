@@ -282,14 +282,24 @@ class ApiMapper
         $query = http_build_query($parameters);
 
         // Build the final URL
-        return http_build_url(
-                $this->getBaseUrl(),
-                array(
-                    "path" => $route,
-                    "query" => $query
-                ),
-                HTTP_URL_JOIN_PATH | HTTP_URL_JOIN_QUERY
-            );
+        if (function_exists('imap_open'))
+            return http_build_url(
+                    $this->getBaseUrl(),
+                    array(
+                        "path" => $route,
+                        "query" => $query
+                    ),
+                    HTTP_URL_JOIN_PATH | HTTP_URL_JOIN_QUERY
+                );
+        
+        return new \http\Url(
+            $this->getBaseUrl(),
+            array(
+                "path" => $route,
+                "query" => $query
+            ),
+            \http\Url::JOIN_PATH | \http\Url::JOIN_QUERY
+        );
     }
 
     /**
