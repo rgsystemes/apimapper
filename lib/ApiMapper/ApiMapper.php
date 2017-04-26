@@ -382,6 +382,7 @@ class ApiMapper
             "url" => $url,
             "response" => $response,
             "parameters" => $parameters,
+            "fields" => $fields,
             "json" => json_decode($response->getContent(), true)
         );
 
