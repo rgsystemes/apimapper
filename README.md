@@ -2,6 +2,22 @@
 
 ApiMapper is a simple wrapper arround Buzz to perform API calls.
 
+## Dependencies
+
+This library requires [pecl_http](https://pecl.php.net/package/pecl_http) to be installed and enabled.
+
+Using APT (Debian/Ubuntu) :
+```bash
+sudo apt-get install -y php-pecl-http
+```
+
+Using PEAR :
+```bash
+sudo pecl install --alldeps pecl_http
+```
+
+## Getting started
+
 ```php
 <?php
 
