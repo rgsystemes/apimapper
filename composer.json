@@ -1,7 +1,12 @@
 {
     "name": "rgsystemes/apimapper",
     "description": "API wrapper",
-    "keywords": ["api", "buzz", "http client", "curl"],
+    "keywords": [
+        "api",
+        "buzz",
+        "http client",
+        "curl"
+    ],
     "homepage": "https://github.com/rgsystemes/apimapper",
     "type": "library",
     "license": "MIT",
@@ -15,7 +20,7 @@
     "require": {
         "php": ">=7.0.8",
         "ext-http": "*",
-		"kriswallsmith/buzz": ">=0.16"
+        "kriswallsmith/buzz": ">=0.16"
     },
     "autoload": {
         "psr-0": {
