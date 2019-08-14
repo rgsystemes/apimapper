@@ -4,10 +4,12 @@ namespace ApiMapper\Test;
 
 use ApiMapper\ApiMapper;
 
-class ApiMapperTest extends \PHPUnit_Framework_TestCase
+use PHPUnit\Framework\TestCase;
+
+class ApiMapperTest extends TestCase
 {
     public function test()
     {
-        echo "salut !";
+        $this->assertTrue(true);
     }
 }

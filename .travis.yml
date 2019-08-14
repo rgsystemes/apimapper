@@ -1,9 +1,17 @@
+os: linux
+dist: trusty
 language: php
-
 php:
-  - 5.3
-  - 5.4
+  - '7.0'
+  - '7.1'
+  - '7.3'
 
-before_script: composer install
+before_install: 
+  - pecl install pecl_http <<< ''
+  - composer self-update
 
-script: phpunit
+install:
+  - composer install
+
+script: 
+  - phpunit
