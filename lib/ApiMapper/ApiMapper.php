@@ -5,16 +5,21 @@ namespace ApiMapper;
 use ApiMapper\EventListeners\ListenerInterface;
 use ApiMapper\Providers\ProviderInterface;
 
-use Buzz\Message\RequestInterface;
 use Buzz\Browser;
+use Buzz\Client\Curl;
+use Buzz\Middleware\LoggerMiddleware;
 use Exception;
+use GuzzleHttp\Psr7\Uri;
+use Http\Discovery\Psr17FactoryDiscovery;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 class ApiMapper
 {
     /**
      * Holds the browser (Buzz) instance we will use to perform http calls
      *
-     * @var Buzz\Browser
+     * @var \Buzz\Browser
      */
     private $browser = null;
 
@@ -60,10 +65,18 @@ class ApiMapper
      */
     private $headerProviders = array();
 
-    public function __construct(Browser $browser, $baseUrl = null)
+    public function __construct(ParameterBagInterface $parameterBag, LoggerInterface $logger)
     {
-        $this->browser = $browser;
-        $this->baseUrl = $baseUrl ?: "http://localhost";
+        $this->browser = new Browser(
+            new Curl(Psr17FactoryDiscovery::findResponseFactory(), [
+                'allow_redirects' => true,
+                'verify' => $parameterBag->get('api_enable_ssl'),
+                'timeout' => $parameterBag->get('api_timeout'),
+            ]),
+            Psr17FactoryDiscovery::findRequestFactory()
+        );
+        $this->browser->addMiddleware(new LoggerMiddleware($logger, 'debug'));
+        $this->baseUrl = $parameterBag->get('api_base_url') ?: "http://localhost";
     }
 
     /**
@@ -221,7 +234,7 @@ class ApiMapper
 
     /**
      * Select a base URL to use for the given call
-     * 
+     *
      * @return string
      */
     public function getBaseUrl()
@@ -281,25 +294,10 @@ class ApiMapper
         // Build the query fields with the remaining parameters
         $query = http_build_query($parameters);
 
-        // Build the final URL
-        if (function_exists('http_build_url'))
-            return http_build_url(
-                    $this->getBaseUrl(),
-                    array(
-                        "path" => $route,
-                        "query" => $query
-                    ),
-                    HTTP_URL_JOIN_PATH | HTTP_URL_JOIN_QUERY
-                );
-        
-        return new \http\Url(
-            $this->getBaseUrl(),
-            array(
-                "path" => $route,
-                "query" => $query
-            ),
-            \http\Url::JOIN_PATH | \http\Url::JOIN_QUERY
-        );
+
+        $uri = new Uri($this->getBaseUrl() . $route);
+
+        return $uri->withQuery($query);
     }
 
     /**
@@ -311,20 +309,6 @@ class ApiMapper
     {
         foreach ($this->eventListeners as $eventListener)
             $eventListener->handle($data);
-    }
-
-    /**
-     * Return true if the given method is safe (GET or HEAD)
-     *
-     * @param string $method
-     * @return bool
-     */
-    private static function isSafeMethod($method)
-    {
-        return in_array(strtoupper($method), array(
-            RequestInterface::METHOD_GET,
-            RequestInterface::METHOD_HEAD
-        ));
     }
 
     /**
@@ -365,15 +349,11 @@ class ApiMapper
         foreach ($this->headerProviders as $headerProvider) {
             $header = $headerProvider->lookup($route);
             if ($header !== false)
-                $headers[] = $header;
+                $headers = \array_merge($headers, $header);
         }
 
         // Perform the call
-        if (static::isSafeMethod($method)) {
-            $response = $this->browser->call($url, $method, $headers);
-        } else {
-            $response = $this->browser->submit($url, $fields, $method, $headers);
-        }
+        $response = $this->browser->request($method, $url, $headers, \http_build_query($fields));
 
         // Parse the content
         $content = array(
@@ -383,7 +363,7 @@ class ApiMapper
             "response" => $response,
             "parameters" => $parameters,
             "fields" => $fields,
-            "json" => json_decode($response->getContent(), true)
+            "json" => json_decode($response->getBody(), true)
         );
 
         // Dispatch content to event listeners
