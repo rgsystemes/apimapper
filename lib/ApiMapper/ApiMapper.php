@@ -333,6 +333,7 @@ class ApiMapper
         $route = array_shift($arguments);
         $parameters = empty($arguments) ? array() : array_shift($arguments);
         $fields = empty($arguments) ? array() : array_shift($arguments);
+        $form = empty($arguments) ? array() : array_shift($arguments);
 
         // Fill route placeholders, and append query fields
         $url = $this->buildUrl($route, $parameters);
@@ -353,7 +354,11 @@ class ApiMapper
         }
 
         // Perform the call
-        $response = $this->browser->request($method, $url, $headers, \http_build_query($fields));
+        if ($form) {
+            $response = $this->browser->submitForm($url, $fields, $method, $headers);
+        } else {
+            $response = $this->browser->request($method, $url, $headers, \http_build_query($fields));
+        }
 
         // Parse the content
         $content = array(
