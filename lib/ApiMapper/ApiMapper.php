@@ -368,7 +368,8 @@ class ApiMapper
             "response" => $response,
             "parameters" => $parameters,
             "fields" => $fields,
-            "json" => json_decode($response->getBody(), true)
+            "body" => str_starts_with($response->getHeader('Content-Type'), 'application/json') ? json_decode($response->getBody(), true) : $response->getBody(),
+            "json" => \json_last_error() === \JSON_ERROR_NONE,
         );
 
         // Dispatch content to event listeners
