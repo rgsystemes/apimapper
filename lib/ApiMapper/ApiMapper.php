@@ -368,7 +368,7 @@ class ApiMapper
             "response" => $response,
             "parameters" => $parameters,
             "fields" => $fields,
-            "body" => str_starts_with($response->getHeader('Content-Type'), 'application/json') ? json_decode($response->getBody(), true) : $response->getBody(),
+            "body" => str_starts_with($response->getHeaderLine('Content-Type'), 'application/json') ? json_decode($response->getBody(), true) : (string) $response->getBody(),
             "json" => \json_last_error() === \JSON_ERROR_NONE,
         );
 
