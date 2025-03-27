@@ -295,7 +295,7 @@ class ApiMapper
         $query = http_build_query($parameters);
 
 
-        $uri = new Uri($this->getBaseUrl() . $route);
+        $uri = new Uri($this->getBaseUrl() . \ltrim($route, '/'));
 
         return $uri->withQuery($query);
     }
